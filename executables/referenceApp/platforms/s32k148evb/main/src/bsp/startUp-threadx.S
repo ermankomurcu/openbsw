@@ -12,21 +12,20 @@ __isr_vector:
     .long   __StackTop                                      /* Top of Stack */
     .long   Reset_Handler                                   /* Reset Handler */
     .long   DefaultISR                                      /* NMI_Handler                                     /* NMI Handler*/
-    .long   HardFault_Handler                               /* Hard Fault Handler*/
+    .long   DefaultISR                                      /* Hard Fault Handler*/
     .long   DefaultISR                                      /* MemManage_Handler                               /* MPU Fault Handler*/
-    .long   BusFault_Handler                                /* Bus Fault Handler*/
-    .long   UsageFault_Handler                              /* Usage Fault Handler*/
+    .long   DefaultISR                                      /* Bus Fault Handler*/
+    .long   DefaultISR                                      /* Usage Fault Handler*/
     .long   0                                               /* Reserved*/
     .long   0                                               /* Reserved*/
     .long   0                                               /* Reserved*/
     .long   0                                               /* Reserved*/
-    .long   SVC_Handler                                     /* SVCall Handler*/
+    .long   DefaultISR                                      /* SVCall Handler*/
     .long   DefaultISR                                      /* DebugMon_Handler                                /* Debug Monitor Handler*/
     .long   0                                               /* Reserved*/
-    .long   PendSV_Handler                                  /* PendSV Handler*/
-    .long   SysTick_Handler                                 /* SysTick Handler*/
+    .long   __tx_PendSVHandler                              /* PendSV Handler*/
+    .long   __tx_SysTickHandler                             /* SysTick Handler*/
 
-                                                            /* External Interrupts*/
     .long   DefaultISR                                      /* DMA0_IRQHandler                                 /* DMA channel 0 transfer complete*/
     .long   DefaultISR                                      /* DMA1_IRQHandler                                 /* DMA channel 1 transfer complete*/
     .long   DefaultISR                                      /* DMA2_IRQHandler                                 /* DMA channel 2 transfer complete*/
@@ -464,6 +463,28 @@ Reset_Handler:
 DefaultISR:
     b       DefaultISR
     .size DefaultISR, . - DefaultISR
+
+@ /* System Tick timer interrupt handler */
+    .global  __tx_SysTickHandler
+    .global  SysTick_Handler
+    .thumb_func
+__tx_SysTickHandler:
+    .thumb_func
+SysTick_Handler:
+@ VOID TimerInterruptHandler (VOID)
+@ {
+@
+    PUSH    {r0, lr}
+#ifdef TX_ENABLE_EXECUTION_CHANGE_NOTIFY
+    BL      _tx_execution_isr_enter             @ Call the ISR enter function
+#endif
+    BL      _tx_timer_interrupt
+#ifdef TX_ENABLE_EXECUTION_CHANGE_NOTIFY
+    BL      _tx_execution_isr_exit              @ Call the ISR exit function
+#endif
+    POP     {r0, lr}
+    BX      LR
+@ }
 
 Exception:
      cpsid   i               /* Mask interrupts */

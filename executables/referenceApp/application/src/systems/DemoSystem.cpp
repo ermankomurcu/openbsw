@@ -116,6 +116,7 @@ void DemoSystem::cyclic()
     // Send a CAN frame every second.
     if (deltaTimeMs >= 1000)
     {
+        Logger::debug(DEMO, "Demo is running time: %d", canSentCount);
         previousSentTime                       = now;
         ::can::ICanTransceiver* canTransceiver = _canSystem.getCanTransceiver(::busid::CAN_0);
         if (canTransceiver != nullptr)
